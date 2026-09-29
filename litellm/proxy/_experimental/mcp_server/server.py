@@ -1751,6 +1751,9 @@ if MCP_AVAILABLE:
                     server, oauth2_headers, mcp_server_auth_headers
                 )
             ):
+                from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+                challenge_diagnostic(StarletteRequest(scope), "missing_credential")
                 www_authenticate = get_passthrough_www_authenticate(
                     scope=scope,
                     server_name=server_name,
@@ -1768,6 +1771,9 @@ if MCP_AVAILABLE:
                 and _get_forwarded_auth_from_scope(scope) is None
                 and not operations._client_has_per_server_auth_header(server, mcp_server_auth_headers)
             ):
+                from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+                challenge_diagnostic(StarletteRequest(scope), "missing_credential")
                 www_authenticate = get_passthrough_www_authenticate(
                     scope=scope,
                     server_name=server_name,
@@ -2274,6 +2280,9 @@ if MCP_AVAILABLE:
                     if active_request_count <= 0 and active_request_session_id not in _stateful_session_auth_contexts:
                         _stateful_session_locks.pop(active_request_session_id, None)
         except MCPUpstreamAuthError as e:
+            from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+            challenge_diagnostic(StarletteRequest(scope), "upstream")
             # Upstream delegated auth returned 401; surface it to the client so
             # standards-compliant MCP clients trigger the upstream OAuth flow.
             raise e.to_http_exception(
@@ -2421,6 +2430,9 @@ if MCP_AVAILABLE:
                         init_options=server.create_initialization_options(),
                     )
         except MCPUpstreamAuthError as e:
+            from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+            challenge_diagnostic(StarletteRequest(scope), "upstream")
             # Upstream delegated auth returned 401; surface it to the client so
             # standards-compliant MCP clients trigger the upstream OAuth flow.
             raise e.to_http_exception(

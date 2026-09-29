@@ -1016,6 +1016,10 @@ async def exchange_token_with_server(
     if grant_type not in ("authorization_code", "refresh_token"):
         raise HTTPException(status_code=400, detail="Unsupported grant_type")
 
+    from litellm.proxy._experimental.mcp_server.oauth_rate_limit import enforce_token_limit
+
+    await enforce_token_limit(request, mcp_server, client_id)
+
     resolved_server: Final = await _server_with_oauth_endpoints(mcp_server, _token_flow_needed_endpoint)
     token_url: Final = resolved_server.effective_token_url
     if token_url is None:
@@ -1175,6 +1179,10 @@ async def exchange_token_with_server(
         )
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 401:
+            from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+            challenge_diagnostic(request, "upstream")
         fault: Final = classify_upstream_token_rejection(
             exc.response,
             credential_source=_token_credential_source(resolved_server),

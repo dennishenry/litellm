@@ -291,6 +291,9 @@ def _gateway_dcr_challenge(
     present a bearer that failed admission (expired or revoked), telling
     spec-compliant clients to re-authorize rather than retry; a request with
     no credentials at all gets the bare challenge per RFC 6750 section 3.1."""
+    from litellm.proxy._experimental.mcp_server.oauth_rate_limit import challenge_diagnostic
+
+    challenge_diagnostic(request, "gateway")
     target: Final = _gateway_dcr_challenge_target(route, mcp_servers, IPAddressUtils.get_mcp_client_ip(request))
     resource_metadata_url: Final = (
         get_passthrough_resource_metadata_url(request.scope, target)
